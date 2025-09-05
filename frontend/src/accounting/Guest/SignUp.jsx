@@ -17,20 +17,21 @@ const SignUp = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (password !== confirmPassword) {
             alert("Passwords don't match");
             return;
         }
-
         try {
-            const data = await registerUser({login, password, fullName, email, country, birthday}).unwrap();
+            const response = await registerUser({ login, password, fullName, email, country, birthday }).unwrap();
 
-            if (data){
-                navigate("/Verification", { state: { email } });
+            if (response.success === false) {
+                // Show backend message to user
+                alert(`Name ${login} already exist`);
+                return;
             }
 
-            // Clear form
+            navigate("/Verification", { state: { email } });
+
             setLogin("");
             setPassword("");
             setConfirmPassword("");
@@ -39,13 +40,12 @@ const SignUp = () => {
             setCountry("");
             setBirthday("");
 
-            // Navigate after successful register
-
         } catch (err) {
             console.error("Registration failed:", err);
-            alert(err.message || "Something went wrong!");
+            alert(err.data?.message || err.message || "Something went wrong!");
         }
     };
+
 
     return (
         <div className="flex justify-center p-4 pt-24"> {/* pt-24 = 6rem padding top for header */}

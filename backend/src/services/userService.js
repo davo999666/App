@@ -14,34 +14,48 @@ class UserService {
         }
         return false;
     }
-     async  verifyEmil(data) {
+    async verifyEmail(data) {
         const existingUser = await userRepository.findUser(data);
-        if (existingUser) {
-            throw new Error('User already exists');
-        }
-         const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
-        await sendVerificationEmail(data.email, verificationCode);
-         tempUsers.set(data.email, { data, code: verificationCode });
-         return { message: "Verification code sent" };
 
-    }
-    async register(data){
-        const { email, code} = data;
-        const temp = tempUsers.get(email);
-        if (!temp) {
-            tempUsers.delete(email);
-            throw new Error("No verification found for this email");
+        if (existingUser) {
+            return { success: false, message: 'User already exists' };
         }
+        const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
+        await sendVerificationEmail(data.email, verificationCode);
+        tempUsers.set(data.email, { data, code: verificationCode });
+
+        return { success: true, message: 'Verification code sent' };
+    }
+
+    async register(data) {
+        const { email, code } = data;
+        const temp = tempUsers.get(email);
+
+        if (!temp) {
+            return { success: false, message: "No verification found for this email" };
+        }
+
         if (temp.code !== code) {
             tempUsers.delete(email);
-            throw new Error("Invalid verification code");
+            return { success: false, message: "Invalid verification code" };
         }
-        await userRepository.createUser(temp.data);
+
+        // Create user
+        const createdUser = await userRepository.createUser(temp.data);
+
+        // Remove temporary verification
         tempUsers.delete(email);
-        const token = await jwt.sign({ login: temp.data.login }, process.env.SECRET_KEY, { expiresIn: '30d' });
-        const user = await temp.data;
-        return {token, user}
+
+        // Generate JWT
+        const token = jwt.sign(
+            { login: createdUser.login, email: createdUser.email },
+            process.env.SECRET_KEY,
+            { expiresIn: '30d' }
+        );
+
+        return { success: true, token, user: createdUser };
     }
+
 }
 
 

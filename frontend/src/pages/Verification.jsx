@@ -16,20 +16,29 @@ const Verification = () => {
 
     const handleVerify = async () => {
         try {
-            const data = await sendVerifyCode(email, code);
-            if (data && data.token) {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("Name", data.user?.fullName || "");
+            // Pass an object with {email, code}
+            const response = await sendVerifyCode({ email, code });
+
+            // RTK Query returns data in response.data or response.error
+            const result = response.data || response.error?.data;
+
+            if (result?.token) {
+                // Successful verification
+                localStorage.setItem("token", result.token);
+                localStorage.setItem("Name", result.user?.fullName || "");
                 setMessage("✅ Verified! Redirecting...");
                 navigate("/");
             } else {
-                setMessage(data?.error || "❌ Invalid code");
+                // Failed verification
+                setMessage(result?.message || "❌ Invalid code");
             }
         } catch (err) {
             console.error("Verification error:", err);
             setMessage("❌ Something went wrong. Try again.");
         }
     };
+
+
 
     return (
         <div style={{padding: "20px", maxWidth: "400px", margin: "0 auto"}}>
@@ -61,8 +70,8 @@ const Verification = () => {
             </button>
 
             {message && (
-                <p style={{marginTop: "10px", color: message.includes("✅") ? "green" : "red"}}>
-                    {message}
+                <p style={{marginTop: "10px", color: String(message).includes("✅") ? "green" : "red"}}>
+                    {String(message)}
                 </p>
             )}
         </div>
