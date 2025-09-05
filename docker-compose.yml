@@ -4,22 +4,24 @@ services:
   backend:
     build: ./backend
     container_name: my_backend
+    restart: always
     ports:
       - "8080:8080"
-    restart: always
     environment:
-      - MONGODB_URI=mongodb+srv://david:12345.com@cluster0.ttsijqs.mongodb.net/GameApp?retryWrites=true&w=majority&appName=Cluster0
       - PORT=8080
       - DB_NAME=GameApp
       - SECRET_KEY=x9!sLz4@TqV8eY^
       - EMAIL_USER=gameappfighter@gmail.com
       - EMAIL_PASS=iostwwhyxfdejqdp
+      - MONGODB_URI=mongodb+srv://david:12345.com@cluster0.ttsijqs.mongodb.net/GameApp?retryWrites=true&w=majority&appName=Cluster0
 
   frontend:
     build: ./frontend
     container_name: my_frontend
-    ports:
-      - "80:80"
     restart: always
+    ports:
+      - "443:443"
+      - "80:80"
     depends_on:
       - backend
+

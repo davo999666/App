@@ -1,2 +1,2 @@
-export const API_URL = "http://my_backend:8080"
+export const API_URL = "/api";
 
